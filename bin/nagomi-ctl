@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+PORT=39123
+BASE_URL="http://127.0.0.1:${PORT}"
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+show_help() {
+  cat << EOF
+Usage: nagomi-ctl <command> [args]
+
+Commands:
+  weather <mode>     Set weather preset (sunny, sunset, rain, mist, overcast, deep-clear, auto)
+  rain [on|off|toggle] Toggle or set rain state
+  scatter            Scatter the fish
+  fish <+1|-1>       Adjust fish count
+  status             Show status of daemon and wallpaper
+  start              Start daemon and wallpaper
+  stop               Stop daemon and wallpaper
+  restart            Restart wallpaper
+EOF
+}
+
+check_daemon() {
+  if ! pgrep -f "nagomi-daemon" > /dev/null 2>&1; then
+    nohup /usr/bin/python3 "${DIR}/bin/nagomi-daemon" > /dev/null 2>&1 &
+    sleep 0.3
+  fi
+}
+
+send_cmd() {
+  check_daemon
+  curl -s "${BASE_URL}/set?$1" > /dev/null 2>&1
+}
+
+case "$1" in
+  weather|w)
+    target="$2"
+    if [ -z "$target" ]; then
+      echo "Options: sunny, sunset, rain, mist, overcast, deep-clear, auto"
+      exit 1
+    fi
+    send_cmd "type=weather&value=${target}"
+    echo "Weather set to: ${target}"
+    ;;
+
+  rain|r)
+    action="${2:-toggle}"
+    send_cmd "type=rain&value=${action}"
+    echo "Rain: ${action}"
+    ;;
+
+  scatter|s)
+    send_cmd "type=scatter"
+    echo "Scattered fish."
+    ;;
+
+  fish|f)
+    delta="${2:-1}"
+    send_cmd "type=koi-count&delta=${delta}"
+    echo "Fish count adjusted (${delta})"
+    ;;
+
+  status)
+    res=$(curl -s "${BASE_URL}/status" 2>/dev/null)
+    if [ -n "$res" ]; then
+      echo "Daemon: running"
+      echo "$res" | python3 -m json.tool 2>/dev/null || echo "$res"
+    else
+      echo "Daemon: stopped"
+    fi
+    if pgrep -x "wewa" > /dev/null 2>&1; then
+      echo "Wallpaper (wewa): running"
+    else
+      echo "Wallpaper (wewa): stopped"
+    fi
+    ;;
+
+  start)
+    check_daemon
+    if ! pgrep -x "wewa" > /dev/null 2>&1; then
+      wewa "${DIR}/dist" > /dev/null 2>&1 &
+      echo "Nagomi wallpaper started."
+    else
+      echo "Nagomi wallpaper is already running."
+    fi
+    ;;
+
+  stop)
+    wewa --stopall > /dev/null 2>&1
+    pkill -f "nagomi-daemon" > /dev/null 2>&1
+    echo "Nagomi wallpaper stopped."
+    ;;
+
+  restart)
+    wewa --stopall > /dev/null 2>&1
+    sleep 0.5
+    wewa "${DIR}/dist" > /dev/null 2>&1 &
+    echo "Nagomi wallpaper restarted."
+    ;;
+
+  help|-h|--help|"")
+    show_help
+    ;;
+
+  *)
+    echo "Unknown command: $1"
+    show_help
+    exit 1
+    ;;
+esac

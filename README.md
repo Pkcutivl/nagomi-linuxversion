@@ -44,3 +44,21 @@ lotus leaves, flowers, and shadow strength.
 - Press `D` to show the procedural spine.
 - Press `H` to hide the interface.
 - Press `R` to reset the simulation.
+
+## Linux Version
+
+Live wallpaper for Wayland (Niri, Hyprland, Sway) with auto day/night cycle, live weather sync, and CLI control.
+
+### Install & Run
+```bash
+./install.sh
+nagomi-ctl start
+```
+
+### CLI Controls
+```bash
+nagomi-ctl weather [sunny|sunset|rain|auto]
+nagomi-ctl rain [on|off|toggle]
+nagomi-ctl scatter
+nagomi-ctl stop
+```

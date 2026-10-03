@@ -85,6 +85,7 @@ import {
   WEATHER_PRESETS,
   type WeatherPresetId,
 } from "./weather";
+import { initLinuxMod } from "./linux-mod";
 
 interface SceneStats {
   koi: number;
@@ -105,7 +106,10 @@ const GITHUB_REPOSITORY = "msk1039/procedural-koi-threejs";
 const WALLPAPER_APP_URL = "https://nagomi.m4yank.com/";
 
 // Restores v2 (or migrates v1) localStorage settings into the store before
-// the first render, and wires up debounced+pagehide saving from then on.
+if (typeof localStorage !== "undefined") {
+  localStorage.removeItem("nagomi:pond-settings:v2");
+  localStorage.removeItem("nagomi:pond-settings:v1");
+}
 loadInto(settings);
 connectPersistence(settings);
 
@@ -174,7 +178,7 @@ export function App() {
   const ambientModeRef = useRef(false);
   const soundEnabledRef = useRef<boolean>(AUDIO.defaultEnabled);
   const [stats, setStats] = useState<SceneStats>(emptyStats);
-  const [showInterface, setShowInterface] = useState(true);
+  const [showInterface, setShowInterface] = useState(false);
   const [ambientMode, setAmbientMode] = useState(false);
   const [ambientControlsVisible, setAmbientControlsVisible] = useState(true);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -423,6 +427,22 @@ export function App() {
     changeWeather(DEFAULT_WEATHER_PRESET_ID);
     setAmbientSoundEnabled(false);
   }, [changeWeather, setAmbientSoundEnabled]);
+
+  const weatherPresetRef = useRef(weatherPreset);
+  weatherPresetRef.current = weatherPreset;
+  const rainEnabledRef = useRef(rainEnabled);
+  rainEnabledRef.current = rainEnabled;
+
+  useEffect(() => {
+    return initLinuxMod({
+      setWeather: changeWeather,
+      setRain: handleRainChange,
+      scatter,
+      changeKoiCount,
+      getCurrentWeather: () => weatherPresetRef.current,
+      getRainEnabled: () => rainEnabledRef.current,
+    });
+  }, [changeWeather, handleRainChange, scatter, changeKoiCount]);
 
   useEffect(() => {
     const handleFullscreenChange = (): void => {

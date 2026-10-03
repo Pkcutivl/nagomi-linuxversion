@@ -271,8 +271,8 @@ export class FishRenderer {
     this.underwaterTarget.texture.generateMipmaps = false;
 
     this.compositeTarget = new THREE.WebGLRenderTarget(CANVAS_WIDTH, CANVAS_HEIGHT, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
       depthBuffer: false,
       stencilBuffer: false,
     });

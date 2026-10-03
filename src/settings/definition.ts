@@ -435,7 +435,7 @@ const water = group(
   {
     showCurrentEffect: bool({ default: true }),
     // 0 preserves the original surface pattern; 1 reveals the koi more clearly.
-    clarity: num({ default: 0, min: 0, max: 1, step: 0.01 }),
+    clarity: num({ default: 0.5, min: 0, max: 1, step: 0.01 }),
     colorTint: rgb({ default: [0.96, 1.02, 1.0], min: 0, max: 2, step: 0.001 }),
     largeCurrentColor: rgb({ default: [0.022, 0.068, 0.047], min: 0, max: 1, step: 0.0005 }),
     largeCurrentCoreColor: rgb({ default: [0.052, 0.155, 0.108], min: 0, max: 1, step: 0.0005 }),
